@@ -245,8 +245,6 @@ export class LLMWithMCP {
             }
         }
 
-        await this.disconnect();
-
         return lastResponse;
     }
 }

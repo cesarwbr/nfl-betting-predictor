@@ -15,7 +15,7 @@ export class NFLBettingPredictor {
     }
 
     public async initialize() {
-        this.llm.connect();
+        await this.llm.connect();
     }
 
     public async analyzeBettingOpportunity(game: Game) {
