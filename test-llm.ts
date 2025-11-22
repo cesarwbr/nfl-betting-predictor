@@ -1,15 +1,17 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { LLMWithMCP } from "./llm.ts";
 
-console.log("key", process.env.ANTHROPIC_API_KEY);
+async function testLLMWithMCP() {
+    const llm = new LLMWithMCP();
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+    try {
+        await llm.connect();
+        const response = await llm.chat(
+            "Search for information about NFL betting trends and give me a summary",
+        );
+        console.log("LLM Response:", response);
+    } catch (error) {
+        console.error("Error:", error);
+    }
+}
 
-const message = await client.messages.create({
-  max_tokens: 1024,
-  messages: [{ role: "user", content: "Hello, Claude" }],
-  model: "claude-sonnet-4-5-20250929",
-});
-
-console.log(message.content);
+testLLMWithMCP();
