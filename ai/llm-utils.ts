@@ -1,19 +1,47 @@
 import fs from "fs";
 import path from "path";
 
+export interface ChartInfo {
+    filename: string;
+    base64: string;
+}
+
 export function savePNGCharts(
     charts: Array<{ index: number; base64: string }>,
+    dir: string,
     prefix: string = "chart",
-) {
-    const savedFiles: string[] = [];
-    const dir = "analysis_results";
+): ChartInfo[] {
+    const chartInfos: ChartInfo[] = [];
+
+    // Ensure directory exists
+    fs.mkdirSync(dir, { recursive: true });
+
     for (const chart of charts) {
         const filename = `${prefix}-${chart.index}.png`;
         const filepath = path.join(dir, filename);
         fs.writeFileSync(filepath, chart.base64, { encoding: "base64" });
-        savedFiles.push(filename);
+        chartInfos.push({
+            filename,
+            base64: chart.base64,
+        });
     }
-    return savedFiles;
+    return chartInfos;
+}
+
+export function embedChartsInMarkdown(markdown: string, charts: ChartInfo[]): string {
+    if (charts.length === 0) {
+        return markdown;
+    }
+
+    // Add charts section at the end of the markdown
+    let result = markdown + "\n\n## Generated Charts\n\n";
+
+    for (const chart of charts) {
+        result += `### ${chart.filename}\n\n`;
+        result += `![${chart.filename}](data:image/png;base64,${chart.base64})\n\n`;
+    }
+
+    return result;
 }
 
 export function extractPythonCode(argumentsString: string): string | null {

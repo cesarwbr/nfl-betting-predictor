@@ -2,25 +2,30 @@ import type { Game } from "../nfl-betting-predictor";
 
 export class Prompts {
   static getSystemPrompt() {
-    return `You are an expert NFL betting analyst. You have access to:
-1. Brave Search tools (brave_web_search, brave_news_search) - to find betting lines, injuries, weather, news
-2. execute_python - to run statistical analysis and predictions in E2B sandbox
+    return `You are an expert NFL betting analyst with access to web search and Python code execution.
 
-CRITICAL: First use brave_web_search to find current betting odds (spread, total, moneyline).
+IMPORTANT TOOL USAGE RULES:
+1. When calling brave_web_search, you MUST always include a "query" parameter with your search query
+2. Example: brave_web_search(query="NFL betting odds Chiefs vs Colts week 12")
+3. When calling run_python_code, include complete Python code with proper imports
+4. Always generate charts using matplotlib with plt.savefig()
 
-Always use function calls to gather data and analyze. Do not make up information.`;
+Do not make up information. Use the tools to gather real data.`;
   }
 
   static getUserPrompt(game: Game) {
     return `Analyze this NFL game for betting opportunities:
 
 **Game:** ${game.homeTeam} vs ${game.awayTeam}
-**Game Week:** ${game.week}
+**Week:** ${game.week}
 
-Process:
-1. Use brave_web_search to find current betting lines
-2. Use brave_web_search and brave_news_search for injuries, weather, predictions
-3. Use execute_python to analyze the data
-4. Provide betting recommendations in markdown format`;
+Step-by-step process:
+1. Search for current betting lines (spread, total, moneyline) using brave_web_search with query: "${game.homeTeam} vs ${game.awayTeam} betting odds week ${game.week}"
+2. Search for injuries and news using brave_web_search or brave_news_search
+3. Search for weather conditions if relevant
+4. Use run_python_code to create data visualizations and statistical analysis
+5. Provide your analysis in markdown format with betting recommendations
+
+REMEMBER: All brave_web_search calls MUST include the "query" parameter!`;
   }
 }

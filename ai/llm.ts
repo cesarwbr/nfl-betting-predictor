@@ -2,7 +2,7 @@ import { Groq } from "groq-sdk";
 import { BraveSearchMCP } from "./brave-search-mcp.js";
 import { E2BSandbox } from "./e2b-sandbox.js";
 import fs from "fs";
-import { extractPythonCode, savePNGCharts } from "./llm-utils.js";
+import { extractPythonCode, savePNGCharts, embedChartsInMarkdown, type ChartInfo } from "./llm-utils.js";
 
 export class LLMWithMCP {
     private groq: Groq;
@@ -11,6 +11,7 @@ export class LLMWithMCP {
     private pythonCodeExecutionCount: number = 0;
     private maxPythonExecutions: number = 1;
     private maxRetries: number;
+    private allCharts: ChartInfo[] = [];
 
     constructor() {
         this.groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
@@ -39,6 +40,7 @@ export class LLMWithMCP {
     private async executeChatRound(
         messages: any[],
         groqTools: any[],
+        matchFolder: string,
     ): Promise<{ chartsGenerated: boolean; finalResponse: string }> {
         let response = await this.groq.chat.completions.create({
             model: "moonshotai/kimi-k2-instruct-0905",
@@ -117,16 +119,18 @@ export class LLMWithMCP {
                                 executionResult.charts.length > 0
                             ) {
                                 chartsGenerated = true;
-                                const savedFiles = savePNGCharts(
+                                const chartInfos = savePNGCharts(
                                     executionResult.charts,
-                                    "nfl-analysis",
+                                    matchFolder,
+                                    "chart",
                                 );
+                                this.allCharts.push(...chartInfos);
                                 result = {
                                     success: true,
                                     stdout: executionResult.stdout,
-                                    charts_saved: savedFiles,
+                                    charts_saved: chartInfos.map(c => c.filename),
                                     chart_count: executionResult.charts.length,
-                                    message: `Code executed successfully! Generated ${executionResult.charts.length} chart(s): ${savedFiles.join(", ")}`,
+                                    message: `Code executed successfully! Generated ${executionResult.charts.length} chart(s): ${chartInfos.map(c => c.filename).join(", ")}`,
                                 };
                             } else {
                                 result = {
@@ -146,10 +150,20 @@ export class LLMWithMCP {
                     }
                 } else {
                     try {
-                        result = await this.mcp.callTool(
-                            toolCall.function.name,
-                            JSON.parse(toolCall.function.arguments),
-                        );
+                        const args = JSON.parse(toolCall.function.arguments);
+
+                        // Validate required parameters for brave_web_search
+                        if (toolCall.function.name === "brave_web_search" && !args.query) {
+                            result = {
+                                success: false,
+                                error: `The 'query' parameter is required for brave_web_search. Please provide a search query string.`,
+                            };
+                        } else {
+                            result = await this.mcp.callTool(
+                                toolCall.function.name,
+                                args,
+                            );
+                        }
                     } catch (e) {
                         result = {
                             success: false,
@@ -166,7 +180,7 @@ export class LLMWithMCP {
             }
 
             response = await this.groq.chat.completions.create({
-                model: "openai/gpt-oss-20b",
+                model: "moonshotai/kimi-k2-instruct-0905",
                 messages,
                 tools: groqTools,
                 tool_choice: "auto",
@@ -179,7 +193,10 @@ export class LLMWithMCP {
         };
     }
 
-    public async chat(systemPrompt: string, userMessage: string) {
+    public async chat(systemPrompt: string, userMessage: string, matchFolder: string) {
+        // Reset charts for this analysis
+        this.allCharts = [];
+
         const mcpTools = await this.mcp.getTools();
 
         const groqTools = [
@@ -236,7 +253,7 @@ export class LLMWithMCP {
                 },
             ];
 
-            const result = await this.executeChatRound(messages, groqTools);
+            const result = await this.executeChatRound(messages, groqTools, matchFolder);
             chartsGenerated = result.chartsGenerated;
             lastResponse = result.finalResponse;
 
@@ -245,6 +262,9 @@ export class LLMWithMCP {
             }
         }
 
-        return lastResponse;
+        // Embed charts in markdown
+        const markdownWithCharts = embedChartsInMarkdown(lastResponse, this.allCharts);
+
+        return markdownWithCharts;
     }
 }
