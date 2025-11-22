@@ -35,6 +35,10 @@ export class LLMWithMCP {
     // Initial message to LLM with tools
     const messages: any[] = [
       {
+        role: "system",
+        content: "You are Alessandro, a student from italy",
+      },
+      {
         role: "user",
         content: userMessage,
       },
@@ -62,7 +66,7 @@ export class LLMWithMCP {
       for (const toolCall of toolCalls) {
         const result = await this.mcp.callTool(
           toolCall.function.name,
-          JSON.parse(toolCall.function.arguments),
+          JSON.parse(toolCall.function.arguments)
         );
 
         // Add tool result as a separate message with role "tool"
