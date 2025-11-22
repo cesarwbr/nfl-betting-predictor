@@ -79,7 +79,7 @@ export class LLMWithMCP {
     groqTools: any[],
   ): Promise<{ chartsGenerated: boolean; finalResponse: string }> {
     let response = await this.groq.chat.completions.create({
-      model: "openai/gpt-oss-20b",
+      model: "moonshotai/kimi-k2-instruct-0905",
       messages,
       tools: groqTools,
       tool_choice: "auto",
