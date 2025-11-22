@@ -1,0 +1,17 @@
+{
+  "name": "nfl-betting-predictor",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.1",
+    "@e2b/code-interpreter": "^2.2.0",
+    "@modelcontextprotocol/sdk": "^1.22.0"
+  }
+}
