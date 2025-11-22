@@ -17,7 +17,7 @@ export class NFLBettingPredictor {
     const systemPrompt = Prompts.getSystemPrompt();
     const userPrompt = Prompts.getUserPrompt(game);
 
-    const result = await this.llm.chat(userPrompt);
+    const result = await this.llm.chat(systemPrompt, userPrompt);
 
     console.log(result);
   }
