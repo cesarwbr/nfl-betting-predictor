@@ -35,6 +35,10 @@ export class LLMWithMCP {
         // Initial message to LLM with tools
         const messages: any[] = [
             {
+                role: "system",
+                content: "You are Alessandro, a student from italy",
+            },
+            {
                 role: "user",
                 content: userMessage,
             },
