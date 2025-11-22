@@ -1,6 +1,11 @@
-import { LLMWithMCP } from "./llm";
-import { Prompts } from "./prompts";
-import type { Game } from "./types";
+import { LLMWithMCP } from "./ai/llm";
+import { Prompts } from "./ai/prompts";
+
+export interface Game {
+    homeTeam: string;
+    awayTeam: string;
+    week: number;
+}
 
 export class NFLBettingPredictor {
     private llm: LLMWithMCP;
